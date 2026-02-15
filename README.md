@@ -9,9 +9,9 @@ S. Zhao, M. Gong, T. Liu, H. Fu and D. Tao. Domain Generalization via Entropy Re
 * torch 2.7.1+cu118
 * torchvision 0.22.1+cu118
 
-### Run
+### Dataset prepare
 
-* Download the PACS dataset (https://drive.google.com/drive/folders/0B6x7gtvErXgfUU1WcGY5SzdwZVk), and prepare the dataset as follows:
+* Download the PACS dataset (https://www.kaggle.com/datasets/nickfratto/pacs-dataset), and prepare the dataset as follows:
     ```
     |- dataset
         |- PACS
