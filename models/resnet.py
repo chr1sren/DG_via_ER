@@ -1,6 +1,19 @@
 from torch import nn
-from torch.utils import model_zoo
-from torchvision.models.resnet import BasicBlock, model_urls, Bottleneck
+from torchvision.models.resnet import BasicBlock, Bottleneck
+
+try:
+    from torchvision.models.resnet import model_urls
+except ImportError:
+    model_urls = {
+        'resnet18': 'https://download.pytorch.org/models/resnet18-5c106cde.pth',
+        'resnet50': 'https://download.pytorch.org/models/resnet50-0676ba61.pth',
+    }
+
+try:
+    from torch.hub import load_state_dict_from_url
+except ImportError:
+    from torch.utils.model_zoo import load_url as load_state_dict_from_url
+
 from models.aux_models import aux_models
 
 class ResNet(nn.Module):
@@ -80,7 +93,7 @@ def resnet18(num_classes, num_domains, pretrained=True):
     """
     model = ResNet(BasicBlock, [2, 2, 2, 2], num_classes)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet18']), strict=False)
+        model.load_state_dict(load_state_dict_from_url(model_urls['resnet18']), strict=False)
     
     dis_model, c_model, cp_model = aux_models(model.feat_ch, num_domains, num_classes, layers_dis=[1024, 256], layers_cls=[1024, 256])
 
@@ -94,7 +107,7 @@ def resnet50(num_classes, num_domains, pretrained=True):
     """
     model = ResNet(Bottleneck, [3, 4, 6, 3], num_classes)
     if pretrained:
-        model.load_state_dict(model_zoo.load_url(model_urls['resnet50']), strict=False)
+        model.load_state_dict(load_state_dict_from_url(model_urls['resnet50']), strict=False)
 
     dis_model, c_model, cp_model = aux_models(model.feat_ch, num_domains, num_classes, layers_dis=[1024, 256], layers_cls=[1024, 256])
 

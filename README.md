@@ -1,10 +1,13 @@
-## The PyTorch implementation of our work on domain generalization: 
+### Intro
+
+The reproduction repo for domain generalization paper: 
 
 S. Zhao, M. Gong, T. Liu, H. Fu and D. Tao. Domain Generalization via Entropy Regularization. NeurIPS 2020. 
 
-### Environment
-* Python 3.6
-* PyTorch 1.1.0
+### Environment (for reproduction)
+* Python 3.10
+* torch 2.7.1+cu118
+* torchvision 0.22.1+cu118
 
 ### Run
 
@@ -21,11 +24,32 @@ S. Zhao, M. Gong, T. Liu, H. Fu and D. Tao. Domain Generalization via Entropy Re
             |- photo
                 |- *.jpg
     ```
-* Execute the following command to run (replace xxx with any one of the four datasets, such as art_painting):
 
-    ```
-    python train.py --target xxx
-    ````
+### Reproduction & Ablation
+
+1. **Reproduction**  
+   ```bash
+   python run_all.py reproduction
+   ```
+
+2. **Ablation**  
+   ```bash
+   python run_all.py ablation_all
+   ```
+   To run with less epoch, e.g: 50 epoch:
+   ```bash
+   python run_all.py ablation_all --epoch 50
+   ```
+
+3. **Plot**  
+   ```bash
+   python run_all.py plot
+   ```
+   Outputs: `figures/reproduction_plot.png`, `figures/ablation_unified.png`
+
+4. **Paper baseline**  
+   Edit `figures/paper_baseline.json` with the PACS test accuracies from the NeurIPS 2020 paper.
+
 ### Citation
 ```
 @article{zhao2020domain,
@@ -36,6 +60,3 @@ S. Zhao, M. Gong, T. Liu, H. Fu and D. Tao. Domain Generalization via Entropy Re
   year={2020}
 }
 ```
-### Contact
-
-Shanshan Zhao: szha4333 AT uni dot sydney dot edu dot au / sshan.zhao00 AT gmail dot com

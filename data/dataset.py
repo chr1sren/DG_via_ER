@@ -114,6 +114,7 @@ def get_split_dataset_info(txt_list, val_percentage):
     return get_random_subset(names, labels, val_percentage)
 
 def get_train_dataloader(args):
+    num_workers = getattr(args, "num_workers", 4)
 
     dataset_list = args.source
     assert isinstance(dataset_list, list)
@@ -127,12 +128,12 @@ def get_train_dataloader(args):
         train_dataset = MyDataset(name_train, labels_train, img_transformer=img_transformer, data_dir=args.data_dir)
         val_datasets.append(MyDataset(name_val, labels_val, img_transformer=get_val_transformer(args), data_dir=args.data_dir))
     
-        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=12, pin_memory=True, drop_last=False)
+        train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, num_workers=num_workers, pin_memory=True, drop_last=False, persistent_workers=(num_workers > 0))
         img_num_per_domain.append(len(name_train))
         train_loader_list.append(train_loader)
 
     val_dataset = ConcatDataset(val_datasets)
-    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=12, pin_memory=True, drop_last=False)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, drop_last=False, persistent_workers=(num_workers > 0))
     return train_loader_list, val_loader, img_num_per_domain
 
 def get_val_dataloader(args):
@@ -153,7 +154,8 @@ def get_val_dataloader(args):
         
         dataset = ConcatDataset([val_dataset])
 
-    loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=12, pin_memory=True, drop_last=False)
+    num_workers = getattr(args, "num_workers", 4)
+    loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=False, num_workers=num_workers, pin_memory=True, drop_last=False, persistent_workers=(num_workers > 0))
     return loader
 
 def get_train_transformers(args):

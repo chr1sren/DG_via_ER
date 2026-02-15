@@ -1,5 +1,6 @@
 import argparse
 import torch
+# torch.backends.cudnn.enabled = False
 from torch import nn
 from torch.nn import functional as F
 
@@ -20,6 +21,7 @@ def get_args():
     parser.add_argument("--image_size", type=int, default=224, help="Image size")
     parser.add_argument("--data_dir", default="./dataset", help="Data directory")
     parser.add_argument("--datalist_dir", default="./datalist", help="Data list directory")
+    parser.add_argument("--num_workers", type=int, default=4, help="DataLoader num_workers")
 
     parser.add_argument("--min_scale", default=0.8, type=float, help="Minimum scale percent")
     parser.add_argument("--max_scale", default=1.0, type=float, help="Maximum scale percent")
@@ -43,7 +45,8 @@ def get_args():
     parser.add_argument("--num_classes", "-c", type=int, default=7, help="Number of classes")
     parser.add_argument("--network", choices=model_factory.nets_map.keys(), default="resnet18", help="Which network to use")
     parser.add_argument("--exp_folder", default="experiments", help="Directory for logs and models")
-    
+    parser.add_argument("--run_suffix", default="", help="Optional subdir for this run (e.g. ablation id)")
+
     return parser.parse_args()
 
 class Trainer:
@@ -70,7 +73,7 @@ class Trainer:
         self.num_domains = len(args.source)
 
         self.base_dir = os.path.join(args.exp_folder, args.network, args.dataset)
-        self.save_dir = os.path.join(self.base_dir, args.target)
+        self.save_dir = os.path.join(self.base_dir, args.target, args.run_suffix) if args.run_suffix else os.path.join(self.base_dir, args.target)
         if not os.path.exists(self.save_dir):
             os.makedirs(self.save_dir)
         save_options(args, self.save_dir)
@@ -124,7 +127,6 @@ class Trainer:
         return loss
     
     def _do_epoch(self):
-        
         set_mode(self.main_model, "train")
         set_mode(self.dis_model, "train")
         set_mode(self.c_model, "train")
@@ -148,6 +150,8 @@ class Trainer:
             loader_iter_list.append(enumerate(loader))
             loader_size_list.append(len(loader))
 
+        print(f"--> Start Epoch {self.current_epoch}, Total iters: {max(loader_size_list)}")
+
         for it in range(max(loader_size_list)):
             data = []
             labels = []
@@ -164,6 +168,9 @@ class Trainer:
             data = torch.cat(data, dim=0).to(self.device)
             labels = torch.cat(labels, dim=0).to(self.device)
             domains = torch.cat(domains, dim=0).to(self.device)
+
+            if it % 10 == 0:
+                print(f"\rProcessing batch {it}/{max(loader_size_list)}...", flush=True)
 
             set_requires_grad(self.main_model, False)
             set_requires_grad(self.c_model, True)
@@ -236,6 +243,8 @@ class Trainer:
     def do_training(self):
 
         self.results = {"val": torch.zeros(self.args.epochs), "test": torch.zeros(self.args.epochs)}
+
+        print(f"=== Starting Training for {self.args.epochs} Epochs ===")
         
         for self.current_epoch in range(self.args.epochs):
             self._do_epoch()
@@ -246,9 +255,25 @@ class Trainer:
         idx_best = val_res.argmax()
         message = "Best val %.5f (epoch: %d), corresponding test %.5f\n" % (val_res.max(), 
                                                                         idx_best, test_res[idx_best])
-        print(message)
+        print(message, flush=False)
         with open(self.log_file, "a") as fid:
             fid.write(message)
+
+        # For run_all.py
+        import json
+        summary = {
+            "target": self.args.target,
+            "best_val_acc": float(val_res.max()),
+            "best_epoch": int(idx_best),
+            "test_acc": float(test_res[idx_best]),
+            "epochs": self.args.epochs,
+            "lbd_d": getattr(self.args, "lbd_d", None),
+            "lbd_c": getattr(self.args, "lbd_c", None),
+            "lbd_cp": getattr(self.args, "lbd_cp", None),
+        }
+        summary_file = os.path.join(self.save_dir, "results_summary.json")
+        with open(summary_file, "w") as f:
+            json.dump(summary, f, indent=2)
         
 if __name__ == "__main__":
     args = get_args()
