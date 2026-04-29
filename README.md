@@ -25,7 +25,7 @@ S. Zhao, M. Gong, T. Liu, H. Fu and D. Tao. Domain Generalization via Entropy Re
                 |- *.jpg
     ```
 
-### Reproduction & Ablation
+### Run
 
 1. **Reproduction**  
    ```bash
@@ -45,18 +45,6 @@ S. Zhao, M. Gong, T. Liu, H. Fu and D. Tao. Domain Generalization via Entropy Re
    ```bash
    python run_all.py plot
    ```
-   Outputs: `figures/reproduction_plot.png`, `figures/ablation_unified.png`
 
 4. **Paper baseline**  
    Edit `figures/paper_baseline.json` with the PACS test accuracies from the NeurIPS 2020 paper.
-
-### Citation
-```
-@article{zhao2020domain,
-  title={Domain Generalization via Entropy Regularization},
-  author={Zhao, Shanshan and Gong, Mingming and Liu, Tongliang and Fu, Huan and Tao, Dacheng},
-  journal={Advances in Neural Information Processing Systems},
-  volume={33},
-  year={2020}
-}
-```
